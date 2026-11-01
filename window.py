@@ -1,5 +1,6 @@
 import sys
 import csv
+import sqlite3
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QApplication,
@@ -15,6 +16,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
 )
 from PyQt6.QtGui import QFont
+from create_file_widget import Create_file
 
 
 class Taskplanner(QMainWindow):
@@ -27,12 +29,13 @@ class Taskplanner(QMainWindow):
             "Тёмная",
             "Светлая",
             "Добро пожаловать в Project alpha",
-            "Создать новый файл",
-            "Открыть файл",
+            "Deleted",
+            "Открыть список задач",
             "Настройки",
             "Выберите файл",
             "базы данных (*.db);",
             "Назад",
+            "Выйти",
         ]
         self.setWindowTitle("Project alpha")
         self.setGeometry(100, 100, 1000, 700)
@@ -72,20 +75,21 @@ class Taskplanner(QMainWindow):
         start_page_layout.addWidget(self.start_label)
         start_page_layout.addStretch()
 
-        self.open_new_button = QPushButton(self.all_titles[5])
-        self.open_new_button.setFont(start_font)
-        start_page_layout.addWidget(self.open_new_button)
-
         self.open_file_button = QPushButton(self.all_titles[6])
         self.open_file_button.setFont(start_font)
-        self.open_file_button.clicked.connect(self.open_file)
+        self.open_file_button.clicked.connect(self.create_new_task)
         start_page_layout.addWidget(self.open_file_button)
 
         self.preferences_button = QPushButton(self.all_titles[7])
         self.preferences_button.setFont(start_font)
         start_page_layout.addWidget(self.preferences_button)
-        start_page_layout.addStretch()
         self.preferences_button.clicked.connect(self.open_preferences)
+
+        self.exit_button = QPushButton(self.all_titles[11])
+        self.exit_button.setFont(start_font)
+        self.exit_button.clicked.connect(self.exit)
+        start_page_layout.addWidget(self.exit_button)
+        start_page_layout.addStretch()
 
         self.stacked_widget.addWidget(self.start_page)
 
@@ -115,7 +119,10 @@ class Taskplanner(QMainWindow):
 
         self.stacked_widget.addWidget(self.page_preferences)
 
-    def open_file(self):
+    def exit(self):
+        sys.exit(app.exec())
+
+    def open_table(self):
         file = QFileDialog.getOpenFileNames(
             self, self.all_titles[8], "", self.all_titles[9]
         )[0]
@@ -125,6 +132,11 @@ class Taskplanner(QMainWindow):
 
     def start_menu(self):
         self.stacked_widget.setCurrentWidget(self.start_page)
+
+    def create_new_task(self):
+        task = Create_file(self)
+        if task.exec():
+            data = task.result()
 
 
 if __name__ == "__main__":

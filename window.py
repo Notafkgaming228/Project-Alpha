@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QTableWidget,
     QTableWidgetItem,
+    QMessageBox
 )
 from PyQt6.QtGui import QFont
 from create_file_widget import Create_file
@@ -39,6 +40,8 @@ class Taskplanner(QMainWindow):
             "Назад",
             "Выйти",
             "Создать событие",
+            "Подтверждение",
+            "Вы уверены, что хотите выйти?"
         ]
         self.setWindowTitle("Project alpha")
         self.setGeometry(100, 100, 1000, 700)
@@ -58,7 +61,8 @@ class Taskplanner(QMainWindow):
             if ok_pressed:
                 with open("preferences.csv", "w", encoding="utf8") as preferences:
                     writer = csv.writer(preferences, delimiter=";")
-                    writer.writerow(["dark"] if theme == "Тёмная" else ["light"])
+                    writer.writerow(["dark"] if theme ==
+                                    "Тёмная" else ["light"])
 
         container = QWidget()  # меню
         self.setCentralWidget(container)
@@ -144,7 +148,15 @@ class Taskplanner(QMainWindow):
         self.stacked_widget.addWidget(self.task_menu_page)
 
     def exit(self):
-        sys.exit(app.exec())
+        answer = QMessageBox.question(
+            self,
+            self.all_titles[13],
+            self.all_titles[14],
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            sys.exit(app.exec())
 
     def open_table(self):
         file = QFileDialog.getOpenFileNames(

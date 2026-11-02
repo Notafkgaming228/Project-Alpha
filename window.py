@@ -125,19 +125,21 @@ class Taskplanner(QMainWindow):
         self.task_menu_page = QWidget()  # список задач
         self.task_menu_layout = QHBoxLayout(self.task_menu_page)
         self.task_table = QTableWidget()  # временно пустой
-        select_theme_layout.addWidget(self.task_table)
+        self.task_menu_layout.addWidget(self.task_table)
         self.button_layout = QVBoxLayout()
 
         back_button = QPushButton(self.all_titles[10])
         back_button.setFont(start_font)
         back_button.clicked.connect(self.start_menu)
-        self.button_layout.addWidget(back_button)
 
         add_button = QPushButton(self.all_titles[12])
         add_button.setFont(start_font)
         add_button.clicked.connect(self.create_new_task)
 
         self.button_layout.addWidget(add_button)
+        self.button_layout.addStretch()
+        self.button_layout.addWidget(back_button)
+
         self.task_menu_layout.addLayout(self.button_layout)
         self.stacked_widget.addWidget(self.task_menu_page)
 

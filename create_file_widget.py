@@ -4,7 +4,13 @@ from PyQt6 import uic
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QApplication, QDialog
 
-titles = ["Дата, время", "Название:", "Описание:", "Уровень важности(от 1 до 3):"]
+titles = [
+    "Дата, время",
+    "Название:",
+    "Описание:",
+    "Уровень важности(от 1 до 3):",
+    "Готово",
+]
 
 template = f"""<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
@@ -126,7 +132,7 @@ template = f"""<?xml version="1.0" encoding="UTF-8"?>
        <item>
         <widget class="QPushButton" name="pushButton_2">
          <property name="text">
-          <string>Готово</string>
+          <string>{titles[4]}</string>
          </property>
         </widget>
        </item>

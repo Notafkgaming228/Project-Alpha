@@ -14,6 +14,8 @@ from PyQt6.QtWidgets import (
     QStackedWidget,
     QComboBox,
     QHBoxLayout,
+    QTableWidget,
+    QTableWidgetItem,
 )
 from PyQt6.QtGui import QFont
 from create_file_widget import Create_file
@@ -36,14 +38,15 @@ class Taskplanner(QMainWindow):
             "базы данных (*.db);",
             "Назад",
             "Выйти",
+            "Создать событие",
         ]
         self.setWindowTitle("Project alpha")
         self.setGeometry(100, 100, 1000, 700)
-
         try:
             with open("preferences.csv", "r", encoding="utf8") as preferences:
                 pass
         except FileNotFoundError:
+
             theme, ok_pressed = QInputDialog.getItem(
                 self,
                 self.all_titles[0],
@@ -77,7 +80,7 @@ class Taskplanner(QMainWindow):
 
         self.open_file_button = QPushButton(self.all_titles[6])
         self.open_file_button.setFont(start_font)
-        self.open_file_button.clicked.connect(self.create_new_task)
+        self.open_file_button.clicked.connect(self.open_task_table)
         start_page_layout.addWidget(self.open_file_button)
 
         self.preferences_button = QPushButton(self.all_titles[7])
@@ -119,6 +122,25 @@ class Taskplanner(QMainWindow):
 
         self.stacked_widget.addWidget(self.page_preferences)
 
+        self.task_menu_page = QWidget()  # список задач
+        self.task_menu_layout = QHBoxLayout(self.task_menu_page)
+        self.task_table = QTableWidget()  # временно пустой
+        select_theme_layout.addWidget(self.task_table)
+        self.button_layout = QVBoxLayout()
+
+        back_button = QPushButton(self.all_titles[10])
+        back_button.setFont(start_font)
+        back_button.clicked.connect(self.start_menu)
+        self.button_layout.addWidget(back_button)
+
+        add_button = QPushButton(self.all_titles[12])
+        add_button.setFont(start_font)
+        add_button.clicked.connect(self.create_new_task)
+
+        self.button_layout.addWidget(add_button)
+        self.task_menu_layout.addLayout(self.button_layout)
+        self.stacked_widget.addWidget(self.task_menu_page)
+
     def exit(self):
         sys.exit(app.exec())
 
@@ -129,6 +151,9 @@ class Taskplanner(QMainWindow):
 
     def open_preferences(self):
         self.stacked_widget.setCurrentWidget(self.page_preferences)
+
+    def open_task_table(self):
+        self.stacked_widget.setCurrentWidget(self.task_menu_page)
 
     def start_menu(self):
         self.stacked_widget.setCurrentWidget(self.start_page)

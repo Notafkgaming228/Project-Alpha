@@ -62,7 +62,7 @@ class Taskplanner(QMainWindow):
                 with open("preferences.csv", "w", encoding="utf8") as preferences:
                     writer = csv.writer(preferences, delimiter=";")
                     writer.writerow(["dark"] if theme ==
-                                    "Тёмная" else ["light"])
+                                    self.all_titles[2] else ["light"])
 
         container = QWidget()  # меню
         self.setCentralWidget(container)

@@ -133,8 +133,8 @@ class Taskplanner(QMainWindow):
 
         self.task_menu_page = QWidget()  # список задач
         self.task_menu_layout = QHBoxLayout(self.task_menu_page)
-        self.task_table = QTableWidget()  # временно пустой
-        self.task_menu_layout.addWidget(self.task_table)
+        self.tableWidget = QTableWidget()
+        self.task_menu_layout.addWidget(self.tableWidget)
         self.button_layout = QVBoxLayout()
 
         back_button = QPushButton(self.all_titles[10])
@@ -167,13 +167,34 @@ class Taskplanner(QMainWindow):
         self.stacked_widget.setCurrentWidget(self.page_preferences)
 
     def open_task_table(self):
-        try:
-            with open("tasks.db", "r") as tasks:
-                pass
-        except FileNotFoundError:
-            with open("tasks.db", "w") as tasks:
-                pass
+        connection = sqlite3.connect('tasks.db')
+        cursor = connection.cursor()
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            time TEXT,
+            name TEXT,
+            description TEXT,
+            level TEXT
+        )
+        ''')
+        connection.commit()
+        connection.close()
         self.stacked_widget.setCurrentWidget(self.task_menu_page)
+        self.con = sqlite3.connect("tasks.db")
+        cur = self.con.cursor()
+        result = cur.execute("SELECT * FROM tasks",).fetchall()
+        self.tableWidget.setRowCount(len(result))
+        if not result:
+            self.statusBar().showMessage('Ничего не нашлось')
+            return
+        self.tableWidget.setColumnCount(len(result[0]))
+        self.titles = [description[0] for description in cur.description]
+        for i, elem in enumerate(result):
+            for j, val in enumerate(elem):
+                self.tableWidget.setItem(i, j, QTableWidgetItem(str(val)))
+        self.modified = {}
 
     def start_menu(self):
         self.stacked_widget.setCurrentWidget(self.start_page)
@@ -181,7 +202,14 @@ class Taskplanner(QMainWindow):
     def create_new_task(self):
         task = Create_file(self)
         if task.exec():
-            data = task.result()
+            connection = sqlite3.connect('tasks.db')
+            cursor = connection.cursor()
+            cursor.execute('''
+            INSERT INTO tasks (date, time, name, description, level) 
+            VALUES (?, ?, ?, ?, ?)
+            ''', task.data)
+            connection.commit()
+            connection.close() 
 
 
 if __name__ == "__main__":

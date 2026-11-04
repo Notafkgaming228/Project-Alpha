@@ -161,14 +161,15 @@ class Create_file(QDialog):
     def run(self):
         result = []
         dt = self.dateTimeEdit.dateTime()
-        result.append(dt.toString("yyyy-MM-dd HH:mm:ss"))
+        result.append(dt.toString("yyyy-MM-dd HH:mm:ss").split()[0])
+        result.append(dt.toString("yyyy-MM-dd HH:mm:ss").split()[1])
         name = self.lineEdit.text()
         result.append(name)
         description = self.textBrowser.toPlainText()
         result.append(description)
         level = self.horizontalSlider.value()
         result.append(level)
-        print(result)
+        self.data = result
         self.data_ready.emit(result)
         self.accept()
 

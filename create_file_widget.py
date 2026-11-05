@@ -1,7 +1,9 @@
 import io
 import sys
+from datetime import datetime
 from PyQt6 import uic
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QDateTime
 from PyQt6.QtWidgets import QApplication, QDialog
 
 titles = [
@@ -157,6 +159,12 @@ class Create_file(QDialog):
         f = io.StringIO(template)
         uic.loadUi(f, self)
         self.pushButton_2.clicked.connect(self.run)
+        self.dateTimeEdit.setDisplayFormat("dd.MM.yyyy HH:mm")
+        now = datetime.now()
+        now_dt = QDateTime(
+            now.year, now.month, now.day, now.hour, now.minute, now.second
+        )
+        self.dateTimeEdit.setDateTime(now_dt)
 
     def run(self):
         result = []

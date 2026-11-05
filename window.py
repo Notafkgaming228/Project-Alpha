@@ -9,8 +9,6 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
-    QFileDialog,
-    QInputDialog,
     QStackedWidget,
     QComboBox,
     QHBoxLayout,
@@ -27,48 +25,43 @@ class Taskplanner(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.all_titles = [
-            "Выберите тему приложения.",
-            "Выберите тему",
-            "Тёмная",
-            "Светлая",
-            "Добро пожаловать в Project alpha",
-            "Удалить событие",
-            "Открыть список задач",
-            "Настройки",
-            "Выберите файл",
-            "базы данных (*.db);",
-            "Назад",
-            "Выйти",
-            "Создать событие",
-            "Подтверждение",
-            "Вы уверены, что хотите выйти?",
-        ]
-        self.setWindowTitle("Project alpha")
+        self.titles = {
+            "welcome_title": "Добро пожаловать в Project alpha",
+            "delete_event": "Удалить событие",
+            "open_table": "Открыть список задач",
+            "preferences": "Настройки",
+            "select_file": "Выберите файл",
+            "file_format": "базы данных (*.db);",
+            "back": "Назад",
+            "exit": "Выйти",
+            "create_event": "Создать событие",
+            "acception": "Подтверждение",
+            "exit_acception": "Вы уверены, что хотите выйти?",
+            "project_alpha": "Project alpha",
+            "select_theme": "Выберите тему",
+            "light_theme": "Светлая",
+            "dark_theme": "Тёмная",
+            "wrong_format": "Неверный формат",
+            "nothing_found": "Ничего не нашлось",
+            "unredactable": "Нельзя редактировать id",
+            "headers": {
+                "id": "id",
+                "date": "Дата",
+                "time": "Время",
+                "name": "Название",
+                "description": "Описание",
+                "level": "Уровень",
+            },
+        }
+        self.setWindowTitle(self.titles["project_alpha"])
         self.setGeometry(100, 100, 1000, 700)
         try:
             with open("preferences.csv", "r", encoding="utf8") as preferences:
                 pass
         except FileNotFoundError:
-
-            theme, ok_pressed = QInputDialog.getItem(
-                self,
-                self.all_titles[0],
-                self.all_titles[1],
-                (self.all_titles[2], self.all_titles[3]),
-                0,
-                False,
-            )
-            if ok_pressed:
-                with open("preferences.csv", "w", encoding="utf8") as preferences:
-                    writer = csv.writer(preferences, delimiter=";")
-                    writer.writerow(
-                        ["dark"] if theme == self.all_titles[2] else ["light"]
-                    )
-            else:
-                with open("preferences.csv", "w", encoding="utf8") as preferences:
-                    writer = csv.writer(preferences, delimiter=";")
-                    writer.writerow(["light"])
+            with open("preferences.csv", "w", encoding="utf8") as preferences:
+                writer = csv.writer(preferences, delimiter=";")
+                writer.writerow(["light"])
 
         container = QWidget()  # меню
         self.setCentralWidget(container)
@@ -82,23 +75,23 @@ class Taskplanner(QMainWindow):
 
         start_font = QFont("Arial", 18)
 
-        self.start_label = QLabel(self.all_titles[4])
+        self.start_label = QLabel(self.titles["welcome_title"])
         self.start_label.setFont(start_font)
         self.start_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         start_page_layout.addWidget(self.start_label)
         start_page_layout.addStretch()
 
-        self.open_file_button = QPushButton(self.all_titles[6])
+        self.open_file_button = QPushButton(self.titles["open_table"])
         self.open_file_button.setFont(start_font)
         self.open_file_button.clicked.connect(self.open_task_table)
         start_page_layout.addWidget(self.open_file_button)
 
-        self.preferences_button = QPushButton(self.all_titles[7])
+        self.preferences_button = QPushButton(self.titles["preferences"])
         self.preferences_button.setFont(start_font)
         start_page_layout.addWidget(self.preferences_button)
         self.preferences_button.clicked.connect(self.open_preferences)
 
-        self.exit_button = QPushButton(self.all_titles[11])
+        self.exit_button = QPushButton(self.titles["exit"])
         self.exit_button.setFont(start_font)
         self.exit_button.clicked.connect(self.exit)
         start_page_layout.addWidget(self.exit_button)
@@ -109,21 +102,21 @@ class Taskplanner(QMainWindow):
         self.page_preferences = QWidget()  # настройки
 
         page_preferences_layout = QVBoxLayout(self.page_preferences)
-        preferences_label = QLabel(self.all_titles[7])
+        preferences_label = QLabel(self.titles["preferences"])
         preferences_label.setFont(start_font)
         page_preferences_layout.addWidget(preferences_label)
 
         select_theme_layout = QHBoxLayout()
-        select_theme_label = QLabel(self.all_titles[1])
+        select_theme_label = QLabel(self.titles["select_theme"])
 
-        back_button = QPushButton(self.all_titles[10])
+        back_button = QPushButton(self.titles["back"])
         back_button.setFont(start_font)
         back_button.clicked.connect(self.start_menu)
 
         select_theme_layout.addWidget(select_theme_label)
 
         theme_select = QComboBox(self)
-        theme_select.addItems([self.all_titles[2], self.all_titles[3]])
+        theme_select.addItems([self.titles["light_theme"], self.titles["dark_theme"]])
         select_theme_layout.addWidget(theme_select)
 
         page_preferences_layout.addLayout(select_theme_layout)
@@ -142,15 +135,15 @@ class Taskplanner(QMainWindow):
         self.tableWidget.itemChanged.connect(self.update_table)
         self.button_layout = QVBoxLayout()
 
-        back_button = QPushButton(self.all_titles[10])
+        back_button = QPushButton(self.titles["back"])
         back_button.setFont(start_font)
         back_button.clicked.connect(self.start_menu)
 
-        add_button = QPushButton(self.all_titles[12])
+        add_button = QPushButton(self.titles["create_event"])
         add_button.setFont(start_font)
         add_button.clicked.connect(self.create_new_task)
 
-        del_button = QPushButton(self.all_titles[5])
+        del_button = QPushButton(self.titles["delete_event"])
         del_button.setFont(start_font)
         del_button.clicked.connect(self.delete_task)
 
@@ -165,8 +158,8 @@ class Taskplanner(QMainWindow):
     def exit(self):
         answer = QMessageBox.question(
             self,
-            self.all_titles[13],
-            self.all_titles[14],
+            self.titles["acception"],
+            self.titles["exit_acception"],
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -185,7 +178,7 @@ class Taskplanner(QMainWindow):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date TEXT NOT NULL,
             time TEXT NOT NULL,
-            name TEXT,
+            name TEXT NOT NULL,
             description TEXT,
             level INTEGER CHECK (level >= 1 AND level <= 3) NOT NULL
         )
@@ -200,10 +193,14 @@ class Taskplanner(QMainWindow):
         ).fetchall()
         self.tableWidget.setRowCount(len(result))
         if not result:
-            self.statusBar().showMessage("Ничего не нашлось")
+            self.statusBar().showMessage(self.titles["nothing_found"])
             return
         self.tableWidget.setColumnCount(len(result[0]))
-        self.titles = [description[0] for description in cur.description]
+        self.title = [description[0] for description in cur.description]
+        headers_map = self.titles.get("headers", {})
+        self.tableWidget.setHorizontalHeaderLabels(
+            [headers_map.get(col, col) for col in self.title]
+        )
         for i, elem in enumerate(result):
             for j, val in enumerate(elem):
                 self.tableWidget.setItem(i, j, QTableWidgetItem(str(val)))
@@ -212,6 +209,7 @@ class Taskplanner(QMainWindow):
 
     def start_menu(self):
         self.stacked_widget.setCurrentWidget(self.start_page)
+        self.statusBar().clearMessage()
 
     def create_new_task(self):
         task = Create_file(self)
@@ -253,7 +251,11 @@ class Taskplanner(QMainWindow):
         id = self.tableWidget.item(row, 0)
         if not id:
             return
-        table_id = int(id.text())
+        try:
+            table_id = int(id.text())
+        except ValueError:
+            self.statusBar().showMessage(self.titles["unredactable"])
+            self.open_task_table()
         column_names = {
             1: "date",
             2: "time",
@@ -266,10 +268,13 @@ class Taskplanner(QMainWindow):
         if not name:
             return
         with sqlite3.connect("tasks.db") as table:
-            table.execute(
-                f"UPDATE tasks SET {name} = ? WHERE id = ?", (new_value, table_id)
-            )
-            table.commit()
+            try:
+                table.execute(
+                    f"UPDATE tasks SET {name} = ? WHERE id = ?", (new_value, table_id)
+                )
+                table.commit()
+            except sqlite3.IntegrityError:
+                self.statusBar().showMessage(self.titles["wrong_format"])
         self.open_task_table()
 
 

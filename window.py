@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
     QTableWidgetItem,
     QMessageBox,
 )
+from PyQt6.QtWidgets import QAbstractItemView
 from PyQt6.QtGui import QFont
 from create_file_widget import Create_file
 
@@ -32,7 +33,7 @@ class Taskplanner(QMainWindow):
             "Тёмная",
             "Светлая",
             "Добро пожаловать в Project alpha",
-            "Deleted",
+            "Удалить событие",
             "Открыть список задач",
             "Настройки",
             "Выберите файл",
@@ -135,6 +136,10 @@ class Taskplanner(QMainWindow):
         self.task_menu_layout = QHBoxLayout(self.task_menu_page)
         self.tableWidget = QTableWidget()
         self.task_menu_layout.addWidget(self.tableWidget)
+        self.tableWidget.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.tableWidget.itemChanged.connect(self.update_table)
         self.button_layout = QVBoxLayout()
 
         back_button = QPushButton(self.all_titles[10])
@@ -145,7 +150,12 @@ class Taskplanner(QMainWindow):
         add_button.setFont(start_font)
         add_button.clicked.connect(self.create_new_task)
 
+        del_button = QPushButton(self.all_titles[5])
+        del_button.setFont(start_font)
+        del_button.clicked.connect(self.delete_task)
+
         self.button_layout.addWidget(add_button)
+        self.button_layout.addWidget(del_button)
         self.button_layout.addStretch()
         self.button_layout.addWidget(back_button)
 
@@ -167,33 +177,37 @@ class Taskplanner(QMainWindow):
         self.stacked_widget.setCurrentWidget(self.page_preferences)
 
     def open_task_table(self):
-        connection = sqlite3.connect('tasks.db')
+        self.tableWidget.blockSignals(True)
+        connection = sqlite3.connect("tasks.db")
         cursor = connection.cursor()
-        cursor.execute('''
+        cursor.execute("""
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT,
-            time TEXT,
+            date TEXT NOT NULL,
+            time TEXT NOT NULL,
             name TEXT,
             description TEXT,
-            level TEXT
+            level INTEGER CHECK (level >= 1 AND level <= 3) NOT NULL
         )
-        ''')
+        """)
         connection.commit()
         connection.close()
         self.stacked_widget.setCurrentWidget(self.task_menu_page)
         self.con = sqlite3.connect("tasks.db")
         cur = self.con.cursor()
-        result = cur.execute("SELECT * FROM tasks",).fetchall()
+        result = cur.execute(
+            "SELECT * FROM tasks",
+        ).fetchall()
         self.tableWidget.setRowCount(len(result))
         if not result:
-            self.statusBar().showMessage('Ничего не нашлось')
+            self.statusBar().showMessage("Ничего не нашлось")
             return
         self.tableWidget.setColumnCount(len(result[0]))
         self.titles = [description[0] for description in cur.description]
         for i, elem in enumerate(result):
             for j, val in enumerate(elem):
                 self.tableWidget.setItem(i, j, QTableWidgetItem(str(val)))
+        self.tableWidget.blockSignals(False)
         self.modified = {}
 
     def start_menu(self):
@@ -202,14 +216,61 @@ class Taskplanner(QMainWindow):
     def create_new_task(self):
         task = Create_file(self)
         if task.exec():
-            connection = sqlite3.connect('tasks.db')
+            connection = sqlite3.connect("tasks.db")
             cursor = connection.cursor()
-            cursor.execute('''
+            cursor.execute(
+                """
             INSERT INTO tasks (date, time, name, description, level) 
             VALUES (?, ?, ?, ?, ?)
-            ''', task.data)
+            """,
+                task.data,
+            )
+            self.statusBar().clearMessage()
             connection.commit()
-            connection.close() 
+            connection.close()
+            self.open_task_table()
+
+    def delete_task(self):
+        selected_indexes = self.tableWidget.selectionModel().selectedRows()
+        if not selected_indexes:
+            return
+        delete = sorted(set(index.row() for index in selected_indexes), reverse=True)
+        with sqlite3.connect("tasks.db") as table:
+            cursor = table.cursor()
+            for row in delete:
+                id = self.tableWidget.item(row, 0)
+                if id is not None:
+                    table_id = int(id.text())
+                    cursor.execute("DELETE FROM tasks WHERE id = ?", (table_id,))
+                self.tableWidget.removeRow(row)
+            table.commit()
+            self.open_task_table()
+
+    def update_table(self, item):
+        row = item.row()
+        col = item.column()
+        new_value = item.text().strip()
+        id = self.tableWidget.item(row, 0)
+        if not id:
+            return
+        table_id = int(id.text())
+        column_names = {
+            1: "date",
+            2: "time",
+            3: "name",
+            4: "description",
+            5: "level",
+        }
+
+        name = column_names.get(col)
+        if not name:
+            return
+        with sqlite3.connect("tasks.db") as table:
+            table.execute(
+                f"UPDATE tasks SET {name} = ? WHERE id = ?", (new_value, table_id)
+            )
+            table.commit()
+        self.open_task_table()
 
 
 if __name__ == "__main__":

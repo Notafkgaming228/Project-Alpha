@@ -18,6 +18,13 @@
 6. Возможность менять язык приложения - 40%
 7. Возможность поменять тему - 50%
 
+Для настройки виртуальной среды используйте следующие команды:
+
+1. python -m venv .venv
+2. .venv\Scripts\activate
+3. pip install PyQT6
+
+
 ## EN
 ⚠️ATTENTION PROJECT ALPHA IS UNDER DEVELOPMENT⚠️
 

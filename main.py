@@ -26,7 +26,7 @@ class Taskplanner(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        light_stylesheet = """
+        self.light_stylesheet = """
         QWidget { background: #f7f7f9; color: #2b2b2b; font-family: "Segoe UI", Arial; font-size: 14px; }
         QPushButton { background: #4a90e2; color: white; border: none; border-radius: 6px; padding: 8px 16px; }
         QPushButton:hover { background: #3d7cc4; }
@@ -35,7 +35,7 @@ class Taskplanner(QMainWindow):
         QHeaderView::section { background: #eef2f7; border: none; padding: 6px; font-weight: bold; }
         """
 
-        dark_stylesheet = """
+        self.dark_stylesheet = """
         QWidget { background: #1e1f22; color: #e4e6eb; font-family: "Segoe UI", Arial; font-size: 14px; }
         QPushButton { background: #3a7bd5; color: white; border: none; border-radius: 6px; padding: 8px 16px; }
         QPushButton:hover { background: #4a8be5; }
@@ -80,20 +80,23 @@ class Taskplanner(QMainWindow):
         self.setGeometry(100, 100, 1000, 700)
         try:
             with open("preferences.csv", "r", encoding="utf8") as preferences:
-                pass
+                row = next(csv.reader(preferences), None)
+                self.current_theme = (
+                    row[0] if row and row[0] in ("light", "dark") else "light"
+                )
         except FileNotFoundError:
-            with open("preferences.csv", "w", encoding="utf8") as preferences:
-                writer = csv.writer(preferences, delimiter=";")
-                writer.writerow(["light"])
-        with open("preferences.csv", "r", encoding="utf8") as preferences:
-            reader = csv.reader(preferences)
-            row = next(reader)
-            if row[0] == "light":
-                self.setStyleSheet(light_stylesheet)
-            else:
-                self.setStyleSheet(dark_stylesheet)
+            self.current_theme = "light"
+            with open(
+                "preferences.csv", "w", encoding="utf8", newline=""
+            ) as preferences:
+                csv.writer(preferences, delimiter=";").writerow(["light"])
 
-        self.setStyleSheet(light_stylesheet)
+        QApplication.instance().setStyleSheet(
+            self.light_stylesheet
+            if self.current_theme == "light"
+            else self.dark_stylesheet
+        )
+
         container = QWidget()  # меню
         self.setCentralWidget(container)
         self.start_layout = QVBoxLayout(container)
@@ -146,10 +149,12 @@ class Taskplanner(QMainWindow):
 
         select_theme_layout.addWidget(select_theme_label)
 
-        theme_select = QComboBox(self)
-        theme_select.addItems([self.titles["light_theme"], self.titles["dark_theme"]])
-        theme_select.currentTextChanged.connect(self.theme_swap)
-        select_theme_layout.addWidget(theme_select)
+        self.theme_select = QComboBox(self)
+        self.theme_select.addItems(
+            [self.titles["light_theme"], self.titles["dark_theme"]]
+        )
+        self.theme_select.activated.connect(self.theme_swap)
+        select_theme_layout.addWidget(self.theme_select)
 
         page_preferences_layout.addLayout(select_theme_layout)
         page_preferences_layout.addStretch()
@@ -196,10 +201,13 @@ class Taskplanner(QMainWindow):
             QMessageBox.StandardButton.No,
         )
         if answer == QMessageBox.StandardButton.Yes:
-            sys.exit(app.exec())
+            QApplication.quit()
 
     def open_preferences(self):
         self.stacked_widget.setCurrentWidget(self.page_preferences)
+        self.theme_select.blockSignals(True)
+        self.theme_select.setCurrentIndex(0 if self.current_theme == "light" else 1)
+        self.theme_select.blockSignals(False)
 
     def open_task_table(self):
         self.tableWidget.blockSignals(True)
@@ -324,9 +332,9 @@ class Taskplanner(QMainWindow):
 
     def color_rows(self):
         colors = {
-            "1": QColor(11, 115, 0),
-            "2": QColor(115, 113, 0),
-            "3": QColor(84, 27, 27),
+            "1": QColor(0, 125, 0),
+            "2": QColor(125, 125, 0),
+            "3": QColor(125, 0, 0),
         }
         for row in range(self.tableWidget.rowCount()):
             item = self.tableWidget.item(row, 5)
@@ -335,12 +343,18 @@ class Taskplanner(QMainWindow):
                     QBrush(colors.get(item.text().strip(), QColor(255, 255, 255)))
                 )
 
-    def theme_swap(self, theme):
-        with open("preferences.csv", mode="w", encoding="utf-8", newline="") as file:
-            writer = csv.writer(file, delimiter=";")
-            writer.writerow(
-                ["light" if theme == self.titles["light_theme"] else "dark"]
-            )
+    def theme_swap(self, index):
+        new_theme = "light" if index == 0 else "dark"
+        if new_theme == self.current_theme:
+            return
+        self.current_theme = new_theme
+        with open("preferences.csv", "w", encoding="utf8", newline="") as file:
+            csv.writer(file, delimiter=";").writerow([new_theme])
+        QApplication.instance().setStyleSheet(
+            self.light_stylesheet if new_theme == "light" else self.dark_stylesheet
+        )
+        if self.stacked_widget.currentWidget() is self.task_menu_page:
+            self.color_rows()
 
 
 if __name__ == "__main__":

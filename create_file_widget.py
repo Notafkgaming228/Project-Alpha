@@ -5,159 +5,67 @@ from PyQt6 import uic
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtCore import QDateTime
 from PyQt6.QtWidgets import QApplication, QDialog
-
-titles = [
-    "Дата, время",
-    "Название:",
-    "Описание:",
-    "Уровень важности(от 1 до 3):",
-    "Готово",
-]
-
-template = f"""<?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>857</width>
-    <height>767</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>Form</string>
-  </property>
-  <layout class="QVBoxLayout" name="verticalLayout_6">
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <property name="sizeConstraint">
-      <enum>QLayout::SetMaximumSize</enum>
-     </property>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>{titles[0]}</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QDateTimeEdit" name="dateTimeEdit"/>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>{titles[1]}</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="lineEdit"/>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>{titles[2]}</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QTextBrowser" name="textBrowser">
-         <property name="readOnly">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <property name="sizeConstraint">
-        <enum>QLayout::SetMaximumSize</enum>
-       </property>
-       <item>
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>{titles[3]}</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSlider" name="horizontalSlider">
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>3</number>
-         </property>
-         <property name="pageStep">
-          <number>1</number>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButton_2">
-         <property name="text">
-          <string>{titles[4]}</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
-  </layout>
- </widget>
- <resources/>
- <connections/>
-</ui>
-
-"""
+from PyQt6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QDateTimeEdit,
+    QLineEdit,
+    QTextBrowser,
+    QSlider,
+    QPushButton,
+)
+from PyQt6.QtCore import Qt
 
 
 class Create_file(QDialog):
     data_ready = pyqtSignal(list)
 
     def __init__(self, parent=None):
+        self.titles = [
+            "Дата, время",
+            "Название:",
+            "Описание:",
+            "Уровень важности(от 1 до 3):",
+            "Готово",
+        ]
         super().__init__(parent)
-        f = io.StringIO(template)
-        uic.loadUi(f, self)
+        self.setWindowTitle("Form")
+        self.resize(857, 767)
+        root = QVBoxLayout(self)
+        hbox = QHBoxLayout()
+        root.addLayout(hbox, 1)
+        v1 = QVBoxLayout()
+        hbox.addLayout(v1, 1)
+        self.label = QLabel(self.titles[0])
+        v1.addWidget(self.label)
+        self.dateTimeEdit = QDateTimeEdit()
+        v1.addWidget(self.dateTimeEdit)
+        v1.addStretch()
+        v2 = QVBoxLayout()
+        hbox.addLayout(v2, 2)
+        self.label_3 = QLabel(self.titles[1])
+        v2.addWidget(self.label_3)
+        self.lineEdit = QLineEdit()
+        v2.addWidget(self.lineEdit)
+        self.label_2 = QLabel(self.titles[2])
+        v2.addWidget(self.label_2)
+        self.textBrowser = QTextBrowser()
+        self.textBrowser.setReadOnly(False)
+        v2.addWidget(self.textBrowser, 1)
+        v3 = QVBoxLayout()
+        hbox.addLayout(v3, 1)
+        self.label_4 = QLabel(self.titles[3])
+        v3.addWidget(self.label_4)
+        self.horizontalSlider = QSlider(Qt.Orientation.Horizontal)
+        self.horizontalSlider.setMinimum(1)
+        self.horizontalSlider.setMaximum(3)
+        self.horizontalSlider.setPageStep(1)
+        v3.addWidget(self.horizontalSlider)
+        v3.addStretch()
+        self.pushButton_2 = QPushButton(self.titles[4])
+        v3.addWidget(self.pushButton_2)
         self.pushButton_2.clicked.connect(self.run)
         self.dateTimeEdit.setDisplayFormat("dd.MM.yyyy HH:mm")
         now = datetime.now()

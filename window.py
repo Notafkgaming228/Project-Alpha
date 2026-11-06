@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 from PyQt6.QtWidgets import QAbstractItemView
+from PyQt6.QtGui import QColor, QBrush
 from PyQt6.QtGui import QFont
 from create_file_widget import Create_file
 
@@ -24,6 +25,28 @@ from create_file_widget import Create_file
 class Taskplanner(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        light_stylesheet = """
+        QWidget { background: #f7f7f9; color: #2b2b2b; font-family: "Segoe UI", Arial; font-size: 14px; }
+        QPushButton { background: #4a90e2; color: white; border: none; border-radius: 6px; padding: 8px 16px; }
+        QPushButton:hover { background: #3d7cc4; }
+        QLineEdit, QTextBrowser, QComboBox, QDateTimeEdit { background: white; border: 1px solid #d0d0d5; border-radius: 6px; padding: 6px 8px; }
+        QTableWidget { background: white; border: 1px solid #d0d0d5; gridline-color: #ececf0; }
+        QHeaderView::section { background: #eef2f7; border: none; padding: 6px; font-weight: bold; }
+        """
+
+        dark_stylesheet = """
+        QWidget { background: #1e1f22; color: #e4e6eb; font-family: "Segoe UI", Arial; font-size: 14px; }
+        QPushButton { background: #3a7bd5; color: white; border: none; border-radius: 6px; padding: 8px 16px; }
+        QPushButton:hover { background: #4a8be5; }
+        QLineEdit, QTextBrowser, QComboBox, QDateTimeEdit { background: #2a2b2f; color: #e4e6eb; border: 1px solid #3a3b3f; border-radius: 6px; padding: 6px 8px; }
+        QTableWidget { background: #2a2b2f; color: #e4e6eb; border: 1px solid #3a3b3f; gridline-color: #3a3b3f; selection-background-color: #2f4f7f; selection-color: white; }
+        QHeaderView::section { background: #232427; color: #e4e6eb; border: none; padding: 6px; font-weight: bold; }
+        QMenuBar { background: #232427; color: #e4e6eb; }
+        QMenu { background: #2a2b2f; color: #e4e6eb; border: 1px solid #3a3b3f; }
+        QMenu::item:selected { background: #3a7bd5; color: white; }
+        QStatusBar { background: #232427; color: #b0b3b8; }
+        """
 
         self.titles = {
             "welcome_title": "Добро пожаловать в Project alpha",
@@ -62,7 +85,15 @@ class Taskplanner(QMainWindow):
             with open("preferences.csv", "w", encoding="utf8") as preferences:
                 writer = csv.writer(preferences, delimiter=";")
                 writer.writerow(["light"])
+        with open("preferences.csv", "r", encoding="utf8") as preferences:
+            reader = csv.reader(preferences)
+            row = next(reader)
+            if row[0] == "light":
+                self.setStyleSheet(light_stylesheet)
+            else:
+                self.setStyleSheet(dark_stylesheet)
 
+        self.setStyleSheet(light_stylesheet)
         container = QWidget()  # меню
         self.setCentralWidget(container)
         self.start_layout = QVBoxLayout(container)
@@ -117,6 +148,7 @@ class Taskplanner(QMainWindow):
 
         theme_select = QComboBox(self)
         theme_select.addItems([self.titles["light_theme"], self.titles["dark_theme"]])
+        theme_select.currentTextChanged.connect(self.theme_swap)
         select_theme_layout.addWidget(theme_select)
 
         page_preferences_layout.addLayout(select_theme_layout)
@@ -171,41 +203,43 @@ class Taskplanner(QMainWindow):
 
     def open_task_table(self):
         self.tableWidget.blockSignals(True)
-        connection = sqlite3.connect("tasks.db")
-        cursor = connection.cursor()
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            time TEXT NOT NULL,
-            name TEXT NOT NULL,
-            description TEXT,
-            level INTEGER CHECK (level >= 1 AND level <= 3) NOT NULL
-        )
-        """)
-        connection.commit()
-        connection.close()
-        self.stacked_widget.setCurrentWidget(self.task_menu_page)
-        self.con = sqlite3.connect("tasks.db")
-        cur = self.con.cursor()
-        result = cur.execute(
-            "SELECT * FROM tasks",
-        ).fetchall()
-        self.tableWidget.setRowCount(len(result))
-        if not result:
-            self.statusBar().showMessage(self.titles["nothing_found"])
-            return
-        self.tableWidget.setColumnCount(len(result[0]))
-        self.title = [description[0] for description in cur.description]
-        headers_map = self.titles.get("headers", {})
-        self.tableWidget.setHorizontalHeaderLabels(
-            [headers_map.get(col, col) for col in self.title]
-        )
-        for i, elem in enumerate(result):
-            for j, val in enumerate(elem):
-                self.tableWidget.setItem(i, j, QTableWidgetItem(str(val)))
-        self.tableWidget.blockSignals(False)
-        self.modified = {}
+        try:
+            connection = sqlite3.connect("tasks.db")
+            cursor = connection.cursor()
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                time TEXT NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT,
+                level INTEGER CHECK (level >= 1 AND level <= 3) NOT NULL
+            )
+            """)
+            connection.commit()
+            connection.close()
+            self.stacked_widget.setCurrentWidget(self.task_menu_page)
+            self.con = sqlite3.connect("tasks.db")
+            cur = self.con.cursor()
+            result = cur.execute("SELECT * FROM tasks").fetchall()
+            self.tableWidget.setRowCount(len(result))
+            if not result:
+                self.statusBar().showMessage(self.titles["nothing_found"])
+                return
+            self.tableWidget.setColumnCount(len(result[0]))
+            self.title = [description[0] for description in cur.description]
+            headers_map = self.titles.get("headers", {})
+            self.tableWidget.setHorizontalHeaderLabels(
+                [headers_map.get(col, col) for col in self.title]
+            )
+            for i, elem in enumerate(result):
+                for j, val in enumerate(elem):
+                    self.tableWidget.setItem(i, j, QTableWidgetItem(str(val)))
+            self.color_rows()
+            self.make_columns_readonly()
+            self.modified = {}
+        finally:
+            self.tableWidget.blockSignals(False)
 
     def start_menu(self):
         self.stacked_widget.setCurrentWidget(self.start_page)
@@ -276,6 +310,37 @@ class Taskplanner(QMainWindow):
             except sqlite3.IntegrityError:
                 self.statusBar().showMessage(self.titles["wrong_format"])
         self.open_task_table()
+
+    def make_columns_readonly(self):
+        blocked = self.tableWidget.blockSignals(True)
+        try:
+            for row in range(self.tableWidget.rowCount()):
+                for col in (1, 2):
+                    item = self.tableWidget.item(row, col)
+                    if item:
+                        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        finally:
+            self.tableWidget.blockSignals(blocked)
+
+    def color_rows(self):
+        colors = {
+            "1": QColor(11, 115, 0),
+            "2": QColor(115, 113, 0),
+            "3": QColor(84, 27, 27),
+        }
+        for row in range(self.tableWidget.rowCount()):
+            item = self.tableWidget.item(row, 5)
+            if item:
+                item.setBackground(
+                    QBrush(colors.get(item.text().strip(), QColor(255, 255, 255)))
+                )
+
+    def theme_swap(self, theme):
+        with open("preferences.csv", mode="w", encoding="utf-8", newline="") as file:
+            writer = csv.writer(file, delimiter=";")
+            writer.writerow(
+                ["light" if theme == self.titles["light_theme"] else "dark"]
+            )
 
 
 if __name__ == "__main__":

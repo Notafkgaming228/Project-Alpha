@@ -13,12 +13,12 @@
 1. Меню приложения ✅
 2. Виджет создания задач ✅
 3. Функциональное меню настроек - 70%
-4. Создание, открытие, редактирование файла настроек - 40%
-5. Создание, открытие, редактирование базы данных с задачами - 30%
-6. Возможность менять язык приложения - 40%
-7. Возможность поменять тему - 50%
+4. Создание, открытие, редактирование файла настроек - ✅
+5. Создание, открытие, редактирование базы данных с задачами - ✅
+6. Возможность менять язык приложения - 70%
+7. Возможность поменять тему - ✅
 
-Для настройки виртуальной среды используйте следующие команды:
+**Для настройки виртуальной среды используйте следующие команды:**
 
 1. python -m venv .venv
 2. .venv\Scripts\activate
@@ -40,7 +40,13 @@ This app will help you remember important events. You can use it to jot down imp
 1. Application Menu ✅
 2. Task Creation Widget ✅
 3. Functional Settings Menu - 70%
-4. Creating, Opening, and Editing a Settings File - 40%
-5. Creating, Opening, and Editing a Task Database - 30%
-6. Ability to Change the Application Language - 40%
-7. Ability to Change the Theme - 50%
+4. Creating, Opening, and Editing a Settings File - ✅
+5. Creating, Opening, and Editing a Task Database - ✅
+6. Ability to Change the Application Language - 70%
+7. Ability to Change the Theme - ✅
+
+**To set up the virtual environment, use the following commands:**
+
+1. python -m venv .venv
+2. .venv\Scripts\activate
+3. pip install PyQT6

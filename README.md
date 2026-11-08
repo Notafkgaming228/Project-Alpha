@@ -9,8 +9,8 @@
 Данное приложение поможет вам не забыть важное событие. С его помощью вы можете записать важное(или не очень) событие, а приложение подскажет если есть запланированные дела.
 
 # Техническое задание:
-1. Меню приложения ✅
-2. Виджет создания задач ✅
+1. Меню приложения - ✅
+2. Виджет создания задач - ✅
 3. Функциональное меню настроек - ✅
 4. Создание, открытие, редактирование файла настроек - ✅
 5. Создание, открытие, редактирование базы данных с задачами - ✅
@@ -35,8 +35,8 @@
 This app will help you remember important events. You can use it to jot down important (or not so important) events, and the app will notify you if you have any upcoming events.
 
 # Technical Specifications:
-1. Application Menu ✅
-2. Task Creation Widget ✅
+1. Application Menu - ✅
+2. Task Creation Widget - ✅
 3. Functional Settings Menu - ✅
 4. Creating, Opening, and Editing a Settings File - ✅
 5. Creating, Opening, and Editing a Task Database - ✅

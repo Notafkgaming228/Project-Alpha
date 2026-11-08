@@ -1,5 +1,4 @@
-## RU
-⚠️ВНИМАНИЕ PROJECT ALPHA НАХОДИТСЯ В РАЗРАБОТКЕ⚠️
+## RU 🎉Теперь в альфа тесте
 
 # Что такое Project Alpha?
 
@@ -12,10 +11,10 @@
 # Техническое задание:
 1. Меню приложения ✅
 2. Виджет создания задач ✅
-3. Функциональное меню настроек - 70%
+3. Функциональное меню настроек - ✅
 4. Создание, открытие, редактирование файла настроек - ✅
 5. Создание, открытие, редактирование базы данных с задачами - ✅
-6. Возможность менять язык приложения - 70%
+6. Возможность менять язык приложения - ✅
 7. Возможность поменять тему - ✅
 
 **Для настройки виртуальной среды используйте следующие команды:**
@@ -25,8 +24,7 @@
 3. pip install PyQT6
 
 
-## EN
-⚠️ATTENTION PROJECT ALPHA IS UNDER DEVELOPMENT⚠️
+## EN 🎉Now in alpha testing
 
 # What is Project Alpha?
 
@@ -39,10 +37,10 @@ This app will help you remember important events. You can use it to jot down imp
 # Technical Specifications:
 1. Application Menu ✅
 2. Task Creation Widget ✅
-3. Functional Settings Menu - 70%
+3. Functional Settings Menu - ✅
 4. Creating, Opening, and Editing a Settings File - ✅
 5. Creating, Opening, and Editing a Task Database - ✅
-6. Ability to Change the Application Language - 70%
+6. Ability to Change the Application Language - ✅
 7. Ability to Change the Theme - ✅
 
 **To set up the virtual environment, use the following commands:**

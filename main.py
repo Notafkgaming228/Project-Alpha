@@ -1,7 +1,7 @@
 import sys
 import csv
 import sqlite3
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QProcess
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -17,85 +17,49 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 from PyQt6.QtWidgets import QAbstractItemView
-from PyQt6.QtGui import QColor, QBrush
-from PyQt6.QtGui import QFont
-from create_file_widget import Create_file
+from PyQt6.QtGui import QColor, QBrush, QFont, QIcon
+from locales.create_file_widget import Create_file
+from locales.languages import ru_titles, en_titles
+from locales.stylesheets import light_stylesheet, dark_stylesheet
 
 
 class Taskplanner(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.light_stylesheet = """
-        QWidget { background: #f7f7f9; color: #2b2b2b; font-family: "Segoe UI", Arial; font-size: 14px; }
-        QPushButton { background: #4a90e2; color: white; border: none; border-radius: 6px; padding: 8px 16px; }
-        QPushButton:hover { background: #3d7cc4; }
-        QLineEdit, QTextBrowser, QComboBox, QDateTimeEdit { background: white; border: 1px solid #d0d0d5; border-radius: 6px; padding: 6px 8px; }
-        QTableWidget { background: white; border: 1px solid #d0d0d5; gridline-color: #ececf0; }
-        QHeaderView::section { background: #eef2f7; border: none; padding: 6px; font-weight: bold; }
-        """
+        self.light_stylesheet = light_stylesheet
+        self.dark_stylesheet = dark_stylesheet
 
-        self.dark_stylesheet = """
-        QWidget { background: #1e1f22; color: #e4e6eb; font-family: "Segoe UI", Arial; font-size: 14px; }
-        QPushButton { background: #3a7bd5; color: white; border: none; border-radius: 6px; padding: 8px 16px; }
-        QPushButton:hover { background: #4a8be5; }
-        QLineEdit, QTextBrowser, QComboBox, QDateTimeEdit { background: #2a2b2f; color: #e4e6eb; border: 1px solid #3a3b3f; border-radius: 6px; padding: 6px 8px; }
-        QTableWidget { background: #2a2b2f; color: #e4e6eb; border: 1px solid #3a3b3f; gridline-color: #3a3b3f; selection-background-color: #2f4f7f; selection-color: white; }
-        QHeaderView::section { background: #232427; color: #e4e6eb; border: none; padding: 6px; font-weight: bold; }
-        QMenuBar { background: #232427; color: #e4e6eb; }
-        QMenu { background: #2a2b2f; color: #e4e6eb; border: 1px solid #3a3b3f; }
-        QMenu::item:selected { background: #3a7bd5; color: white; }
-        QStatusBar { background: #232427; color: #b0b3b8; }
-        """
+        self.ru_titles = ru_titles
+        self.en_titles = en_titles
+        self.titles = dict()
 
-        self.titles = {
-            "welcome_title": "Добро пожаловать в Project alpha",
-            "delete_event": "Удалить событие",
-            "open_table": "Открыть список задач",
-            "preferences": "Настройки",
-            "select_file": "Выберите файл",
-            "file_format": "базы данных (*.db);",
-            "back": "Назад",
-            "exit": "Выйти",
-            "create_event": "Создать событие",
-            "acception": "Подтверждение",
-            "exit_acception": "Вы уверены, что хотите выйти?",
-            "project_alpha": "Project alpha",
-            "select_theme": "Выберите тему",
-            "light_theme": "Светлая",
-            "dark_theme": "Тёмная",
-            "wrong_format": "Неверный формат",
-            "nothing_found": "Ничего не нашлось",
-            "unredactable": "Нельзя редактировать id",
-            "headers": {
-                "id": "id",
-                "date": "Дата",
-                "time": "Время",
-                "name": "Название",
-                "description": "Описание",
-                "level": "Уровень",
-            },
-        }
-        self.setWindowTitle(self.titles["project_alpha"])
+        self.setWindowTitle("project_alpha")
         self.setGeometry(100, 100, 1000, 700)
         try:
             with open("preferences.csv", "r", encoding="utf8") as preferences:
-                row = next(csv.reader(preferences), None)
+                row = next(csv.reader(preferences, delimiter=";"), None)
                 self.current_theme = (
                     row[0] if row and row[0] in ("light", "dark") else "light"
                 )
+                self.current_lang = row[1] if row and row[1] in ("ru", "eng") else "eng"
         except FileNotFoundError:
             self.current_theme = "light"
+            self.current_lang = "eng"
             with open(
                 "preferences.csv", "w", encoding="utf8", newline=""
             ) as preferences:
-                csv.writer(preferences, delimiter=";").writerow(["light"])
+                csv.writer(preferences, delimiter=";").writerow(["light", "eng"])
 
         QApplication.instance().setStyleSheet(
             self.light_stylesheet
             if self.current_theme == "light"
             else self.dark_stylesheet
         )
+        if self.current_lang == "ru":
+            self.titles = self.ru_titles
+        else:
+            self.titles = self.en_titles
 
         container = QWidget()  # меню
         self.setCentralWidget(container)
@@ -126,7 +90,6 @@ class Taskplanner(QMainWindow):
         self.preferences_button.clicked.connect(self.open_preferences)
 
         self.exit_button = QPushButton(self.titles["exit"])
-        self.exit_button.setFont(start_font)
         self.exit_button.clicked.connect(self.exit)
         start_page_layout.addWidget(self.exit_button)
         start_page_layout.addStretch()
@@ -137,14 +100,12 @@ class Taskplanner(QMainWindow):
 
         page_preferences_layout = QVBoxLayout(self.page_preferences)
         preferences_label = QLabel(self.titles["preferences"])
-        preferences_label.setFont(start_font)
         page_preferences_layout.addWidget(preferences_label)
 
         select_theme_layout = QHBoxLayout()
         select_theme_label = QLabel(self.titles["select_theme"])
 
         back_button = QPushButton(self.titles["back"])
-        back_button.setFont(start_font)
         back_button.clicked.connect(self.start_menu)
 
         select_theme_layout.addWidget(select_theme_label)
@@ -154,6 +115,23 @@ class Taskplanner(QMainWindow):
             [self.titles["light_theme"], self.titles["dark_theme"]]
         )
         self.theme_select.activated.connect(self.theme_swap)
+
+        select_lang_layout = QHBoxLayout()
+        select_lang_label = QLabel(self.titles["select_lang"])
+
+        rus_button = QPushButton()
+        rus_button.setIcon(QIcon("locales/rus_flag.png"))
+        rus_button.clicked.connect(self.set_ru_language)
+
+        eng_button = QPushButton()
+        eng_button.setIcon(QIcon("locales/eng_flag.png"))
+        eng_button.clicked.connect(self.set_eng_language)
+
+        select_lang_layout.addWidget(select_lang_label)
+        select_lang_layout.addWidget(rus_button)
+        select_lang_layout.addWidget(eng_button)
+        page_preferences_layout.addLayout(select_lang_layout)
+
         select_theme_layout.addWidget(self.theme_select)
 
         page_preferences_layout.addLayout(select_theme_layout)
@@ -349,12 +327,42 @@ class Taskplanner(QMainWindow):
             return
         self.current_theme = new_theme
         with open("preferences.csv", "w", encoding="utf8", newline="") as file:
-            csv.writer(file, delimiter=";").writerow([new_theme])
+            csv.writer(file, delimiter=";").writerow([new_theme, self.current_lang])
         QApplication.instance().setStyleSheet(
             self.light_stylesheet if new_theme == "light" else self.dark_stylesheet
         )
         if self.stacked_widget.currentWidget() is self.task_menu_page:
             self.color_rows()
+
+    def set_eng_language(self):
+        new_lang = "eng"
+        if self.current_lang == new_lang:
+            pass
+        else:
+            self.current_lang = new_lang
+            self.titles = self.en_titles
+            with open("preferences.csv", "w", encoding="utf8", newline="") as file:
+                csv.writer(file, delimiter=";").writerow(
+                    [self.current_theme, self.current_lang]
+                )
+            self.restart_app()
+
+    def set_ru_language(self):
+        new_lang = "ru"
+        if self.current_lang == new_lang:
+            pass
+        else:
+            self.current_lang = new_lang
+            self.titles = self.ru_titles
+            with open("preferences.csv", "w", encoding="utf8", newline="") as file:
+                csv.writer(file, delimiter=";").writerow(
+                    [self.current_theme, self.current_lang]
+                )
+            self.restart_app()
+
+    def restart_app(self):
+        QProcess.startDetached(sys.executable, sys.argv)
+        QApplication.quit()
 
 
 if __name__ == "__main__":

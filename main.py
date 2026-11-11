@@ -24,6 +24,14 @@ from locales.languages import ru_titles, en_titles
 from locales.stylesheets import light_stylesheet, dark_stylesheet
 
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
 class Taskplanner(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -67,7 +75,7 @@ class Taskplanner(QMainWindow):
         else:
             self.titles = self.en_titles
 
-        container = QWidget()  # меню
+        container = QWidget()
         self.setCentralWidget(container)
         self.start_layout = QVBoxLayout(container)
 
@@ -102,7 +110,7 @@ class Taskplanner(QMainWindow):
 
         self.stacked_widget.addWidget(self.start_page)
 
-        self.page_preferences = QWidget()  # настройки
+        self.page_preferences = QWidget()
 
         page_preferences_layout = QVBoxLayout(self.page_preferences)
         preferences_label = QLabel(self.titles["preferences"])
@@ -126,11 +134,11 @@ class Taskplanner(QMainWindow):
         select_lang_label = QLabel(self.titles["select_lang"])
 
         rus_button = QPushButton()
-        rus_button.setIcon(QIcon("locales/rus_flag.png"))
+        rus_button.setIcon(QIcon(resource_path("locales/rus_flag.png")))
         rus_button.clicked.connect(self.set_ru_language)
 
         eng_button = QPushButton()
-        eng_button.setIcon(QIcon("locales/eng_flag.png"))
+        eng_button.setIcon(QIcon(resource_path("locales/eng_flag.png")))
         eng_button.clicked.connect(self.set_eng_language)
 
         select_lang_layout.addWidget(select_lang_label)
@@ -146,7 +154,7 @@ class Taskplanner(QMainWindow):
 
         self.stacked_widget.addWidget(self.page_preferences)
 
-        self.task_menu_page = QWidget()  # список задач
+        self.task_menu_page = QWidget()
         self.task_menu_layout = QHBoxLayout(self.task_menu_page)
         self.tableWidget = QTableWidget()
         self.task_menu_layout.addWidget(self.tableWidget)

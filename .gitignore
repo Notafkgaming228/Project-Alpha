@@ -1,6 +1,8 @@
 __pycache__
 data
+main
 build
+build\main
 main.spec
 *.csv
 # файл настроек

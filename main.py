@@ -1,5 +1,6 @@
 import sys
 import csv
+import os
 import sqlite3
 from PyQt6.QtCore import Qt, QProcess
 from PyQt6.QtWidgets import (
@@ -17,7 +18,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 from PyQt6.QtWidgets import QAbstractItemView
-from PyQt6.QtGui import QColor, QBrush, QFont, QIcon
+from PyQt6.QtGui import QColor, QBrush, QFont, QIcon, QCloseEvent
 from locales.create_file_widget import Create_file
 from locales.languages import ru_titles, en_titles
 from locales.stylesheets import light_stylesheet, dark_stylesheet
@@ -36,8 +37,13 @@ class Taskplanner(QMainWindow):
 
         self.setWindowTitle("project_alpha")
         self.setGeometry(100, 100, 1000, 700)
+        if os.path.isdir("data"):
+            pass
+        else:
+            os.mkdir("data")
+        self.is_restarting = False
         try:
-            with open("preferences.csv", "r", encoding="utf8") as preferences:
+            with open("data/preferences.csv", "r", encoding="utf8") as preferences:
                 row = next(csv.reader(preferences, delimiter=";"), None)
                 self.current_theme = (
                     row[0] if row and row[0] in ("light", "dark") else "light"
@@ -47,7 +53,7 @@ class Taskplanner(QMainWindow):
             self.current_theme = "light"
             self.current_lang = "eng"
             with open(
-                "preferences.csv", "w", encoding="utf8", newline=""
+                "data/preferences.csv", "w", encoding="utf8", newline=""
             ) as preferences:
                 csv.writer(preferences, delimiter=";").writerow(["light", "eng"])
 
@@ -171,15 +177,7 @@ class Taskplanner(QMainWindow):
         self.stacked_widget.addWidget(self.task_menu_page)
 
     def exit(self):
-        answer = QMessageBox.question(
-            self,
-            self.titles["acception"],
-            self.titles["exit_acception"],
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        if answer == QMessageBox.StandardButton.Yes:
-            QApplication.quit()
+        QApplication.quit()
 
     def open_preferences(self):
         self.stacked_widget.setCurrentWidget(self.page_preferences)
@@ -190,7 +188,7 @@ class Taskplanner(QMainWindow):
     def open_task_table(self):
         self.tableWidget.blockSignals(True)
         try:
-            connection = sqlite3.connect("tasks.db")
+            connection = sqlite3.connect("data/tasks.db")
             cursor = connection.cursor()
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS tasks (
@@ -205,7 +203,7 @@ class Taskplanner(QMainWindow):
             connection.commit()
             connection.close()
             self.stacked_widget.setCurrentWidget(self.task_menu_page)
-            self.con = sqlite3.connect("tasks.db")
+            self.con = sqlite3.connect("data/tasks.db")
             cur = self.con.cursor()
             result = cur.execute("SELECT * FROM tasks").fetchall()
             self.tableWidget.setRowCount(len(result))
@@ -232,9 +230,9 @@ class Taskplanner(QMainWindow):
         self.statusBar().clearMessage()
 
     def create_new_task(self):
-        task = Create_file(self)
+        task = Create_file(self.current_lang, self)
         if task.exec():
-            connection = sqlite3.connect("tasks.db")
+            connection = sqlite3.connect("data/tasks.db")
             cursor = connection.cursor()
             cursor.execute(
                 """
@@ -253,7 +251,7 @@ class Taskplanner(QMainWindow):
         if not selected_indexes:
             return
         delete = sorted(set(index.row() for index in selected_indexes), reverse=True)
-        with sqlite3.connect("tasks.db") as table:
+        with sqlite3.connect("data/tasks.db") as table:
             cursor = table.cursor()
             for row in delete:
                 id = self.tableWidget.item(row, 0)
@@ -287,7 +285,7 @@ class Taskplanner(QMainWindow):
         name = column_names.get(col)
         if not name:
             return
-        with sqlite3.connect("tasks.db") as table:
+        with sqlite3.connect("data/tasks.db") as table:
             try:
                 table.execute(
                     f"UPDATE tasks SET {name} = ? WHERE id = ?", (new_value, table_id)
@@ -326,7 +324,7 @@ class Taskplanner(QMainWindow):
         if new_theme == self.current_theme:
             return
         self.current_theme = new_theme
-        with open("preferences.csv", "w", encoding="utf8", newline="") as file:
+        with open("data/preferences.csv", "w", encoding="utf8", newline="") as file:
             csv.writer(file, delimiter=";").writerow([new_theme, self.current_lang])
         QApplication.instance().setStyleSheet(
             self.light_stylesheet if new_theme == "light" else self.dark_stylesheet
@@ -335,26 +333,28 @@ class Taskplanner(QMainWindow):
             self.color_rows()
 
     def set_eng_language(self):
+        self.is_restarting = True
         new_lang = "eng"
         if self.current_lang == new_lang:
             pass
         else:
             self.current_lang = new_lang
             self.titles = self.en_titles
-            with open("preferences.csv", "w", encoding="utf8", newline="") as file:
+            with open("data/preferences.csv", "w", encoding="utf8", newline="") as file:
                 csv.writer(file, delimiter=";").writerow(
                     [self.current_theme, self.current_lang]
                 )
             self.restart_app()
 
     def set_ru_language(self):
+        self.is_restarting = True
         new_lang = "ru"
         if self.current_lang == new_lang:
             pass
         else:
             self.current_lang = new_lang
             self.titles = self.ru_titles
-            with open("preferences.csv", "w", encoding="utf8", newline="") as file:
+            with open("data/preferences.csv", "w", encoding="utf8", newline="") as file:
                 csv.writer(file, delimiter=";").writerow(
                     [self.current_theme, self.current_lang]
                 )
@@ -363,6 +363,66 @@ class Taskplanner(QMainWindow):
     def restart_app(self):
         QProcess.startDetached(sys.executable, sys.argv)
         QApplication.quit()
+
+    def keyPressEvent(self, event):
+        if event.modifiers() == (Qt.KeyboardModifier.ControlModifier):
+            if event.key() == Qt.Key.Key_I:
+                self.open_preferences()
+            elif event.key() == Qt.Key.Key_O:
+                self.open_task_table()
+            elif event.key() == Qt.Key.Key_X:
+                self.exit()
+            elif event.key() == Qt.Key.Key_X:
+                self.exit()
+            elif (
+                self.stacked_widget.currentIndex() == 2 and event.key() == Qt.Key.Key_N
+            ):
+                self.create_new_task()
+            elif (
+                self.stacked_widget.currentIndex() == 1 and event.key() == Qt.Key.Key_E
+            ):
+                self.set_eng_language()
+            elif (
+                self.stacked_widget.currentIndex() == 1 and event.key() == Qt.Key.Key_R
+            ):
+                self.set_ru_language()
+            elif (
+                self.stacked_widget.currentIndex() == 1 and event.key() == Qt.Key.Key_D
+            ):
+                self.theme_select.setCurrentIndex(1)
+                self.theme_swap(1)
+            elif (
+                self.stacked_widget.currentIndex() == 1 and event.key() == Qt.Key.Key_L
+            ):
+                self.theme_select.setCurrentIndex(0)
+                self.theme_swap(0)
+        elif (
+            self.stacked_widget.currentIndex() == 2 and event.key() == Qt.Key.Key_Delete
+        ):
+            self.delete_task()
+        elif event.key() == Qt.Key.Key_Backspace:
+            self.start_menu()
+        elif event.key() == Qt.Key.Key_F11:
+            if self.isFullScreen():
+                self.showNormal()
+            else:
+                self.showFullScreen()
+
+    def closeEvent(self, event: QCloseEvent):
+        if self.is_restarting:
+            event.accept()
+            return
+        answer = QMessageBox.question(
+            self,
+            self.titles["acception"],
+            self.titles["exit_acception"],
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            event.accept()
+        else:
+            event.ignore()
 
 
 if __name__ == "__main__":

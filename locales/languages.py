@@ -61,3 +61,18 @@ en_titles = {
         "level": "Level",
     },
 }
+eng_widget = {
+    "date_time": "Date, time",
+    "title": "Title",
+    "description": "Description",
+    "importance": "Importance level (1 to 3)",
+    "done": "Done",
+}
+
+ru_widget = {
+    "date_time": "Дата, время",
+    "title": "Название",
+    "description": "Описание",
+    "importance": "Уровень важности (от 1 до 3)",
+    "done": "Готово",
+}

@@ -1,5 +1,7 @@
 __pycache__
 data
+build
+main.spec
 *.csv
 # файл настроек
 *.db

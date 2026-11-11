@@ -1,4 +1,3 @@
-import io
 import sys
 from datetime import datetime
 from PyQt6.QtCore import pyqtSignal

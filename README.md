@@ -23,6 +23,8 @@
 2. .venv\Scripts\activate
 3. pip install PyQT6
 
+**Чтобы заполнить таблицу тестовыми значениями, запустите файл fill_table.py**
+
 
 ## EN 🎉Now in alpha testing
 
@@ -48,3 +50,5 @@ This app will help you remember important events. You can use it to jot down imp
 1. python -m venv .venv
 2. .venv\Scripts\activate
 3. pip install PyQT6
+
+**To fill the table with test values, run the file fill_table.py**

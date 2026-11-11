@@ -221,6 +221,10 @@ class Taskplanner(QMainWindow):
                     self.tableWidget.setItem(i, j, QTableWidgetItem(str(val)))
             self.color_rows()
             self.make_columns_readonly()
+            self.tableWidget.resizeColumnsToContents()
+            for col in range(self.tableWidget.columnCount()):
+                if self.tableWidget.columnWidth(col) > 300:
+                    self.tableWidget.setColumnWidth(col, 300)
             self.modified = {}
         finally:
             self.tableWidget.blockSignals(False)
